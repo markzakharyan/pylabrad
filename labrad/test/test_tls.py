@@ -1,5 +1,6 @@
 import collections
 import contextlib
+from datetime import datetime, timedelta
 import os
 import shutil
 import subprocess
@@ -11,6 +12,10 @@ import pytest
 
 import labrad
 from labrad import crypto
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 
 IN_CI = os.environ.get('CI', False)
@@ -35,6 +40,32 @@ def temp_tls_dirs():
     old_cert_path = crypto.CERTS_PATH
     crypto.CERTS_PATH = cert_path
     try:
+        # generate a localhost certificate with SAN so hostname verification passes
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(issuer)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(datetime.utcnow() - timedelta(days=1))
+            .not_valid_after(datetime.utcnow() + timedelta(days=1))
+            .add_extension(x509.SubjectAlternativeName([x509.DNSName("localhost")]), critical=False)
+            .sign(key, hashes.SHA256())
+        )
+        cert_file = os.path.join(cert_path, "localhost.cert")
+        key_file = os.path.join(key_path, "localhost.key")
+        with open(cert_file, "wb") as cf:
+            cf.write(cert.public_bytes(serialization.Encoding.PEM))
+        with open(key_file, "wb") as kf:
+            kf.write(
+                key.private_bytes(
+                    serialization.Encoding.PEM,
+                    serialization.PrivateFormat.TraditionalOpenSSL,
+                    serialization.NoEncryption(),
+                )
+            )
         yield cert_path, key_path
     finally:
         crypto.CERTS_PATH = old_cert_path
@@ -70,6 +101,8 @@ def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
     """
     with temp_tls_dirs() as (cert_path, key_path):
         password = 'DummyPassword'
+        cert_file = os.path.join(cert_path, 'localhost.cert')
+        key_file = os.path.join(key_path, 'localhost.key')
         manager = subprocess.Popen([
                 'labrad',
                 '--password={}'.format(password),
@@ -78,7 +111,8 @@ def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
                 '--tls-required={}'.format(tls_required),
                 '--tls-required-localhost={}'.format(tls_required),
                 '--tls-cert-path={}'.format(cert_path),
-                '--tls-key-path={}'.format(key_path)])
+                '--tls-key-path={}'.format(key_path),
+                '--tls-hosts=localhost?cert={}&key={}'.format(cert_file, key_file)])
         try:
             start = time.time()
             while True:
