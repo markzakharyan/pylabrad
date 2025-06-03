@@ -14,7 +14,10 @@ from labrad import crypto
 
 
 IN_CI = os.environ.get('CI', False)
-ci_only = pytest.mark.skipif(not IN_CI, reason='only runs in CI')
+SCALABRAD_VERSION = os.environ.get('SCALABRAD_VERSION', '')
+TLS_SUPPORTED = not SCALABRAD_VERSION.startswith('0.9')
+ci_only = pytest.mark.skipif(not IN_CI or not TLS_SUPPORTED,
+                             reason='only runs in CI with supported scalabrad')
 
 
 @contextlib.contextmanager

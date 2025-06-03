@@ -15,6 +15,7 @@ if ! command -v labrad >/dev/null; then
   bash "$(dirname "$0")/install-scalabrad.sh"
   export PATH="$PATH:$HOME/scalabrad-$SCALABRAD_VERSION/bin"
 fi
+export SCALABRAD_VERSION
 
 # start labrad manager
 labrad 1>.labrad.log 2>.labrad.err.log &
