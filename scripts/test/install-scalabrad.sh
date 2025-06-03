@@ -14,6 +14,6 @@ URL_BASE="https://github.com/markzakharyan/scalabrad/releases/download/v${SCALAB
 if [ ! -d "$HOME/scalabrad-${SCALABRAD_VERSION}/bin" ]; then
   wget "${URL_BASE}/${ARCHIVE}" -O "${HOME}/${ARCHIVE}";
   cd $HOME && tar -xvf $ARCHIVE;
-else
-  echo "Using cached scalabrad-${VERSION}.";
-fi
+  else
+    echo "Using cached scalabrad-${SCALABRAD_VERSION}.";
+  fi
