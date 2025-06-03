@@ -16,7 +16,7 @@
 import functools
 
 from twisted.internet import defer
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 
 from labrad import constants as C, manager, protocol, support, types as T
 from labrad.support import (indent, mangle, extractKey, MultiDict, PacketRecord,
@@ -50,7 +50,7 @@ class AsyncSettingWrapper(object):
             args = args[0]
         flat = T.flatten(args, tag)
         r = yield self._server._send([(self.ID, flat)], **kw)
-        returnValue(r[0][1])
+        return r[0][1]
 
     @inlineCallbacks
     def connect(self, handler, context=(0, 0),
@@ -159,7 +159,7 @@ class AsyncPacketWrapper(object):
         # drop keys from records before sending
         records = [(rec.ID, rec.flat) for rec in self._packet]
         r = yield self._server._send(records, **dict(self._kw, **kw))
-        returnValue(PacketResponse(r, self._server, self._packet))
+        return PacketResponse(r, self._server, self._packet)
 
     def _bind(self, method):
         """Bind a method to this instance."""
@@ -393,7 +393,7 @@ def getConnection(host=C.MANAGER_HOST, port=None, name=None,
     p = yield protocol.connect(host, port, tls_mode, username, password,
                                headless)
     yield p.loginClient(name)
-    returnValue(p)
+    return p
 
 
 @inlineCallbacks
@@ -404,7 +404,7 @@ def connectAsync(host=C.MANAGER_HOST, port=None, name=None,
     p = yield getConnection(host, port, name, password, tls_mode=tls_mode,
                             username=username, headless=headless)
     cxn = yield ClientAsync.create(p)
-    returnValue(cxn)
+    return cxn
 
 
 def runAsync(func, *args, **kw):
@@ -427,7 +427,7 @@ class ClientAsync(object):
     def create(protocol):
         cxn = ClientAsync(protocol)
         yield cxn._init()
-        returnValue(cxn)
+        return cxn
 
     def __init__(self, prot):
         self.servers = MultiDict()
@@ -563,7 +563,7 @@ class ClientAsync(object):
     def spawn(self):
         p = yield self._cxn.spawn()
         cxn = yield ClientAsync.create(p)
-        returnValue(cxn)
+        return cxn
 
     def __getitem__(self, key):
         return self.servers[key]
@@ -591,4 +591,4 @@ class ClientAsync(object):
 def wrapAsync(cls, *args, **kw):
     obj = cls(*args, **kw)
     yield obj.refresh()
-    returnValue(obj)
+    return obj

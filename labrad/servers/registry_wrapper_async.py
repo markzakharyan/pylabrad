@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from labrad.support import SafeIterDict
 
 class RegistryWrapperAsync(SafeIterDict):
@@ -39,7 +39,7 @@ class RegistryWrapperAsync(SafeIterDict):
         """Create a registry wrapper and initialize it."""
         wrapper = cls(cxn, directory)
         yield wrapper._init()
-        returnValue(wrapper)
+        return wrapper
 
     def __init__(self, cxn, directory=''):
         """Basic (synchronous) initialization."""

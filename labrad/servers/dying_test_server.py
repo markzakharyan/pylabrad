@@ -33,7 +33,6 @@ timeout = 5
 from labrad import util
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import defer, reactor
-from twisted.internet.defer import returnValue
 from twisted.python import log
 
 from datetime import datetime
@@ -63,7 +62,7 @@ class DyingTestServer(LabradServer):
     def delayed_echo(self, c, data):
         """Echo a packet after a specified delay."""
         yield util.wakeupCall(c['delay'])
-        returnValue(data)
+        return data
 
     @setting(3)
     def delayed_echo_deferred(self, c, data):

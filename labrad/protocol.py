@@ -25,7 +25,7 @@ import hashlib
 import traceback
 
 from twisted.internet import reactor, protocol, defer
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.python import failure, log
 
 import labrad.types as T
@@ -124,7 +124,7 @@ class LabradProtocol(protocol.Protocol):
         """
         target, records = yield self._lookupNames(target, records)
         resp = yield self._sendRequestNoLookup(target, records, context, timeout, unflatten)
-        returnValue(resp)
+        return resp
 
     @inlineCallbacks
     def _lookupNames(self, server, records):
@@ -172,7 +172,7 @@ class LabradProtocol(protocol.Protocol):
             for index, ID in zip(indices, IDs):
                 records[index] = (ID,) + tuple(records[index][1:])
 
-        returnValue((server, records))
+        return (server, records)
 
     def clearCache(self):
         """Clear the cache of looked-up server and settings IDs."""
@@ -210,7 +210,7 @@ class LabradProtocol(protocol.Protocol):
         else:
             records = [(setting_id, data)]
         resp = yield self.sendRequest(C.MANAGER_ID, records, timeout=timeout)
-        returnValue(resp[0][1])
+        return resp[0][1]
 
     def _cancelTimeout(self, result, timeoutCall):
         """Cancel a pending request timeout call."""
@@ -336,7 +336,7 @@ class LabradProtocol(protocol.Protocol):
             yield p.loginClient(self.name)
         else:
             yield p.loginServer(*self.ident)
-        returnValue(p)
+        return p
 
     @inlineCallbacks
     def authenticate(self, username=None, password=None, headless=False):
@@ -350,7 +350,7 @@ class LabradProtocol(protocol.Protocol):
             else:
                 # Old managers only support password auth
                 methods = ['password']
-            returnValue(set(methods))
+            return set(methods)
 
         def require_secure_connection(auth_type):
             is_secure = hasattr(self.transport, 'getPeerCertificate')
@@ -552,14 +552,14 @@ def connect(host=C.MANAGER_HOST, port=None, tls_mode=C.MANAGER_TLS,
         p.set_address(host, port)
         p.spawn_kw = spawn_kw
         yield authenticate(p)
-        returnValue(p)
+        return p
 
     @inlineCallbacks
     def do_connect():
         p = yield _factory.connectTCP(host, port, timeout=C.TIMEOUT)
         p.set_address(host, port)
         p.spawn_kw = spawn_kw
-        returnValue(p)
+        return p
 
     @inlineCallbacks
     def start_tls(p, cert_string=None):
@@ -572,7 +572,7 @@ def connect(host=C.MANAGER_HOST, port=None, tls_mode=C.MANAGER_TLS,
                 'disable encryption for clients. See '
                 'https://github.com/labrad/pylabrad/blob/master/CONFIG.md')
         p.transport.startTLS(crypto.tls_options(host, cert_string=cert_string))
-        returnValue(cert)
+        return cert
 
     @inlineCallbacks
     def ping(p):
@@ -581,7 +581,7 @@ def connect(host=C.MANAGER_HOST, port=None, tls_mode=C.MANAGER_TLS,
             manager_features = set(resp[1])
         else:
             manager_features = set()
-        returnValue(manager_features)
+        return manager_features
 
     p = yield do_connect()
     is_local_connection = util.is_local_connection(p.transport)
@@ -598,7 +598,7 @@ def connect(host=C.MANAGER_HOST, port=None, tls_mode=C.MANAGER_TLS,
             print('Connected without encryption.')
             p.manager_features = set()
             yield authenticate(p)
-            returnValue(p)
+            return p
         try:
             manager_features = yield ping(p)
         except Exception:
@@ -629,4 +629,4 @@ def connect(host=C.MANAGER_HOST, port=None, tls_mode=C.MANAGER_TLS,
     p.manager_features = manager_features
 
     yield authenticate(p)
-    returnValue(p)
+    return p

@@ -50,7 +50,7 @@ class TestCallFuture(object):
             d = defer.Deferred()
             reactor.callLater(0, d.callback, 'woot')
             result = yield d
-            defer.returnValue(result)
+            return result
 
         f = concurrent.call_future(func)
         assert f.result(timeout=0.1) == 'woot'
@@ -80,7 +80,7 @@ class TestFutureToDeferred(object):
         @defer.inlineCallbacks
         def func(f):
             result = yield concurrent.future_to_deferred(f)
-            defer.returnValue(result)
+            return result
 
         f1 = Future()
         f1.set_result(1)
@@ -91,7 +91,7 @@ class TestFutureToDeferred(object):
         @defer.inlineCallbacks
         def func(f):
             result = yield concurrent.future_to_deferred(f)
-            defer.returnValue(result)
+            return result
 
         f1 = Future()
         f2 = concurrent.call_future(func, f1)
@@ -104,7 +104,7 @@ class TestFutureToDeferred(object):
             d = concurrent.future_to_deferred(f)
             f.set_result(1)
             result = yield d
-            defer.returnValue(result)
+            return result
 
         f = Future()
         future = concurrent.call_future(func, f)
@@ -114,7 +114,7 @@ class TestFutureToDeferred(object):
         @defer.inlineCallbacks
         def func(f):
             result = yield concurrent.future_to_deferred(f)
-            defer.returnValue(result)
+            return result
 
         f1 = Future()
         f1.set_exception(ValueError())
@@ -126,7 +126,7 @@ class TestFutureToDeferred(object):
         @defer.inlineCallbacks
         def func(f):
             result = yield concurrent.future_to_deferred(f)
-            defer.returnValue(result)
+            return result
 
         f1 = Future()
         f2 = concurrent.call_future(func, f1)
@@ -140,7 +140,7 @@ class TestFutureToDeferred(object):
             d = concurrent.future_to_deferred(f)
             f.set_exception(ValueError())
             result = yield d
-            defer.returnValue(result)
+            return result
 
         f = Future()
         future = concurrent.call_future(func, f)

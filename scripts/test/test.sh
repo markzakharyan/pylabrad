@@ -17,6 +17,12 @@ if ! command -v labrad >/dev/null; then
 fi
 export SCALABRAD_VERSION
 
+# Install python dependencies if needed
+if ! python -c "import twisted" 2>/dev/null; then
+  pip install -r requirements.txt
+  pip install -e .
+fi
+
 # start labrad manager
 labrad 1>.labrad.log 2>.labrad.err.log &
 sleep 20

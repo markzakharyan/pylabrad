@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 
 from labrad import constants as C, types as T
 
@@ -33,7 +33,7 @@ class AsyncManager:
     def _getIDList(self, setting, data=None):
         resp = yield self._send([(setting, data)])
         names = self._reorderIDList(resp[0][1])
-        returnValue(names)
+        return names
 
     def _reorderIDList(self, L):
         return [(name, ID) for ID, name in L]
@@ -50,7 +50,7 @@ class AsyncManager:
         resp = yield self._send(packet)
         descr, notes = resp[0][1]
         settings = self._reorderIDList(resp[1][1])
-        returnValue((descr, notes, settings))
+        return (descr, notes, settings)
 
     @inlineCallbacks
     def getServerInfoWithSettings(self, serverID):
@@ -67,7 +67,7 @@ class AsyncManager:
             ID, name = s
             descr, accepts, returns, notes = r[1]
             settingList.append((name, ID, (descr, accepts, returns, notes)))
-        returnValue((descr, notes, settingList))
+        return (descr, notes, settingList)
 
     def getSettingsList(self, serverID):
         """Get a list of settings for a server."""
@@ -79,7 +79,7 @@ class AsyncManager:
         packet = [(C.HELP, T.flatten((serverID, settingID), 'ww'))]
         resp = yield self._send(packet)
         description, accepts, returns, notes = resp[0][1]
-        returnValue((description, accepts, returns, notes))
+        return (description, accepts, returns, notes)
 
     @inlineCallbacks
     def getSettingInfoByName(self, serverID, settingName):
@@ -89,10 +89,10 @@ class AsyncManager:
         resp = yield self._send(packet)
         description, accepts, returns, notes = resp[0][1]
         ID = resp[1][1][1]
-        returnValue((description, accepts, returns, notes, ID))
+        return (description, accepts, returns, notes, ID)
 
     @inlineCallbacks
     def subscribeToNamedMessage(self, name, ID, enable=True):
         """Subscribe to or stop a named message."""
         packet = [(C.MESSAGE_SUBSCRIBE, T.flatten((name, ID, enable), 'swb'))]
-        returnValue((yield self._send(packet)))
+        return (yield self._send(packet))

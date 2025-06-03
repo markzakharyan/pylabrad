@@ -37,7 +37,7 @@ from labrad.units import m, s
 from labrad.util import hydrant
 
 from twisted.internet import defer, reactor
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 
 
 class LocalTestServer(LabradServer):
@@ -94,7 +94,7 @@ class LocalTestServer(LabradServer):
     def delayed_echo(self, c, data):
         """Echo a packet after a specified delay."""
         yield util.wakeupCall(c['delay'][s])
-        returnValue(data)
+        return data
 
     @setting(3, "Delayed Echo Deferred", data='?')
     def delayed_echo_deferred(self, c, data):

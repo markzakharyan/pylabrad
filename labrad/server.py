@@ -27,7 +27,7 @@ import traceback
 
 from concurrent import futures
 from twisted.internet import defer, reactor, threads
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.error import ConnectionDone, ConnectionLost
 from twisted.python import failure, log, threadable
 
@@ -249,7 +249,7 @@ class LabradServer(object):
             c.check() # make sure this context hasn't expired
         finally:
             reactor.callLater(0, c.release)
-        returnValue(response)
+        return response
 
     def _getTraceback(self, e):
         """Turn an exception into a LabRAD error packet.
@@ -613,7 +613,7 @@ class ThreadedServer(LabradServer):
             result = self.__pool.submit(func, *args, **kw)
         while isinstance(result, futures.Future):
             result = yield labrad.concurrent.future_to_deferred(result)
-        returnValue(result)
+        return result
 
 
 class SingleThreadedServer(ThreadedServer):

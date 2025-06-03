@@ -253,7 +253,7 @@ def maybeTimeout(deferred, timeout, timeoutResult):
                                               fireOnOneCallback=True,
                                               fireOnOneErrback=True,
                                               consumeErrors=True)
-    returnValue(result)
+    return result
 
 class DeferredSignal(object):
     """An object that can create multiple deferreds on demand.
