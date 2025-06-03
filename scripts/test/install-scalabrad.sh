@@ -5,7 +5,7 @@ set -e
 
 ARCHIVE="scalabrad-${SCALABRAD_VERSION}.tar.gz"
 
-URL_BASE="https://github.com/labrad/scalabrad/releases/download/v${SCALABRAD_VERSION}"
+URL_BASE="https://github.com/markzakharyan/scalabrad/releases/download/v${SCALABRAD_VERSION}"
 
 # check to see if scalabrad folder is empty
 if [ ! -d "$HOME/scalabrad-${SCALABRAD_VERSION}/bin" ]; then
