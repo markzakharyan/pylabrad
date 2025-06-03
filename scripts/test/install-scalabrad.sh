@@ -3,6 +3,9 @@
 # exit on any error
 set -e
 
+# Use default version if not provided
+SCALABRAD_VERSION="${SCALABRAD_VERSION:-0.9.0}"
+
 ARCHIVE="scalabrad-${SCALABRAD_VERSION}.tar.gz"
 
 URL_BASE="https://github.com/markzakharyan/scalabrad/releases/download/v${SCALABRAD_VERSION}"
