@@ -25,7 +25,7 @@ from labrad.server import LabradServer, setting
 from labrad.support import MultiDict
 
 from twisted.internet import defer
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 
 class GPIBDeviceWrapper(DeviceWrapper):
     """A wrapper for a gpib device."""
@@ -73,7 +73,7 @@ class GPIBDeviceWrapper(DeviceWrapper):
         if timeout is not None:
             p.timeout(self._timeout)
         resp = yield p.send()
-        returnValue(resp.query)
+        return resp.query
 
     @inlineCallbacks
     def write(self, s, timeout=None):
@@ -85,7 +85,7 @@ class GPIBDeviceWrapper(DeviceWrapper):
         if timeout is not None:
             p.timeout(self._timeout)
         resp = yield p.send()
-        returnValue(resp.write)
+        return resp.write
 
     @inlineCallbacks
     def write_raw(self, s, timeout=None):
@@ -97,7 +97,7 @@ class GPIBDeviceWrapper(DeviceWrapper):
         if timeout is not None:
             p.timeout(self._timeout)
         resp = yield p.send()
-        returnValue(resp.write_raw)
+        return resp.write_raw
 
 
     @inlineCallbacks
@@ -110,7 +110,7 @@ class GPIBDeviceWrapper(DeviceWrapper):
         if timeout is not None:
             p.timeout(self._timeout)
         resp = yield p.send()
-        returnValue(resp.read)
+        return resp.read
 
     @inlineCallbacks
     def read_raw(self, bytes=None, timeout=None):
@@ -122,7 +122,7 @@ class GPIBDeviceWrapper(DeviceWrapper):
         if timeout is not None:
             p.timeout(self._timeout)
         resp = yield p.send()
-        returnValue(resp.read_raw)
+        return resp.read_raw
 
     def initialize(self):
         """Called when we first connect to the device.
@@ -166,7 +166,7 @@ class GPIBDeviceServer(DeviceServer):
         found = []
         for search in searches:
             found += yield search
-        returnValue(found)
+        return found
 
     @inlineCallbacks
     def _findDevicesForServer(self, srv):
@@ -177,7 +177,7 @@ class GPIBDeviceServer(DeviceServer):
             if deviceName == self.deviceName:
                 name = _getDeviceName(srv, address)
                 found.append((name, (srv, address), {}))
-        returnValue(found)
+        return found
 
     # server settings
 

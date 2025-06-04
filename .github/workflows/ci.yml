@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
-          java-version: '8'
+          java-version: '17'
       - name: Install scalabrad
         run: |
           bash scripts/test/install-scalabrad.sh

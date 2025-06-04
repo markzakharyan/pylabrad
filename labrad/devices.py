@@ -25,7 +25,7 @@ from labrad.errors import Error
 from labrad.support import MultiDict
 
 from twisted.internet import defer, reactor
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 
 LOCK_TIMEOUT = 10
 
@@ -324,7 +324,7 @@ class DeviceServer(LabradServer):
     def refresh_devices(self, c):
         """Refresh the list of available devices."""
         yield self.refreshDeviceList()
-        returnValue(self.list_devices(c))
+        return self.list_devices(c)
 
     @setting(1000001, 'Lock Device',
                       timeout=[': Lock the selected device for default time',

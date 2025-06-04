@@ -1,5 +1,7 @@
 import collections
 import contextlib
+from datetime import datetime, timedelta
+import socket
 import os
 import shutil
 import subprocess
@@ -11,10 +13,13 @@ import pytest
 
 import labrad
 from labrad import crypto
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-IN_CI = os.environ.get('CI', False)
-ci_only = pytest.mark.skipif(not IN_CI, reason='only runs in CI')
+
 
 
 @contextlib.contextmanager
@@ -35,6 +40,32 @@ def temp_tls_dirs():
     old_cert_path = crypto.CERTS_PATH
     crypto.CERTS_PATH = cert_path
     try:
+        # generate a localhost certificate with SAN so hostname verification passes
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(issuer)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(datetime.utcnow() - timedelta(days=1))
+            .not_valid_after(datetime.utcnow() + timedelta(days=1))
+            .add_extension(x509.SubjectAlternativeName([x509.DNSName("localhost")]), critical=False)
+            .sign(key, hashes.SHA256())
+        )
+        cert_file = os.path.join(cert_path, "localhost.cert")
+        key_file = os.path.join(key_path, "localhost.key")
+        with open(cert_file, "wb") as cf:
+            cf.write(cert.public_bytes(serialization.Encoding.PEM))
+        with open(key_file, "wb") as kf:
+            kf.write(
+                key.private_bytes(
+                    serialization.Encoding.PEM,
+                    serialization.PrivateFormat.TraditionalOpenSSL,
+                    serialization.NoEncryption(),
+                )
+            )
         yield cert_path, key_path
     finally:
         crypto.CERTS_PATH = old_cert_path
@@ -46,8 +77,15 @@ def temp_tls_dirs():
 ManagerInfo = collections.namedtuple('ManagerInfo', ['port', 'tls_port', 'password'])
 
 
+def _free_port():
+    s = socket.socket()
+    s.bind(('', 0))
+    p = s.getsockname()[1]
+    s.close()
+    return p
+
 @contextlib.contextmanager
-def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
+def run_manager(tls_required, port=None, tls_port=None, startup_timeout=20):
     """Context manager to run the labrad manager in a subprocess.
 
     Will attempt to connect to the manager and fail if we cannot do so within
@@ -68,8 +106,14 @@ def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
     Yields (ManagerInfo):
         Info about the running manager.
     """
+    if port is None:
+        port = _free_port()
+    if tls_port is None:
+        tls_port = _free_port()
     with temp_tls_dirs() as (cert_path, key_path):
         password = 'DummyPassword'
+        cert_file = os.path.join(cert_path, 'localhost.cert')
+        key_file = os.path.join(key_path, 'localhost.key')
         manager = subprocess.Popen([
                 'labrad',
                 '--password={}'.format(password),
@@ -78,7 +122,8 @@ def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
                 '--tls-required={}'.format(tls_required),
                 '--tls-required-localhost={}'.format(tls_required),
                 '--tls-cert-path={}'.format(cert_path),
-                '--tls-key-path={}'.format(key_path)])
+                '--tls-key-path={}'.format(key_path),
+                '--tls-hosts=localhost?cert={}&key={}'.format(cert_file, key_file)])
         try:
             start = time.time()
             while True:
@@ -97,12 +142,15 @@ def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
                 time.sleep(0.5)
             yield ManagerInfo(port, tls_port, password)
         finally:
-            manager.kill()
+            manager.terminate()
+            try:
+                manager.wait(timeout=5)
+            except Exception:
+                manager.kill()
 
 
 # Test that we can establish encrypted TLS connections to the manager
 
-@ci_only
 def test_connect_with_starttls():
     with run_manager(tls_required=True) as m:
         with labrad.connect(port=m.port, tls_mode='starttls-force',
@@ -110,7 +158,6 @@ def test_connect_with_starttls():
             pass
 
 
-@ci_only
 def test_connect_with_optional_starttls():
     with run_manager(tls_required=False) as m:
         with labrad.connect(port=m.port, tls_mode='off',
@@ -118,7 +165,6 @@ def test_connect_with_optional_starttls():
             pass
 
 
-@ci_only
 def test_connect_with_tls():
     with run_manager(tls_required=True) as m:
         with labrad.connect(port=m.tls_port, tls_mode='on',
@@ -129,7 +175,6 @@ def test_connect_with_tls():
 # Test that connecting to the manager fails if the client fails to
 # use TLS when the manager expects it.
 
-@ci_only
 def test_expect_starttls_use_off():
     with run_manager(tls_required=True) as m:
         with pytest.raises(Exception):
@@ -138,7 +183,6 @@ def test_expect_starttls_use_off():
                 pass
 
 
-@ci_only
 def test_expect_tls_use_off():
     with run_manager(tls_required=True) as m:
         with pytest.raises(Exception):
@@ -147,7 +191,6 @@ def test_expect_tls_use_off():
                 pass
 
 
-@ci_only
 def test_expect_tls_use_starttls():
     with run_manager(tls_required=True) as m:
         with pytest.raises(Exception):

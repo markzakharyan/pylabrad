@@ -115,7 +115,7 @@ def fingerprint(cert_string, digest=hashlib.sha1):
     END_CERT = '-----END CERTIFICATE-----'
     begin_idx = cert_string.index(BEGIN_CERT) + len(BEGIN_CERT)
     end_idx = cert_string.index(END_CERT)
-    cert_b64 = re.sub('\s+', '', cert_string[begin_idx:end_idx])
+    cert_b64 = re.sub(r'\s+', '', cert_string[begin_idx:end_idx])
     cert_bytes = base64.b64decode(cert_b64)
     m = digest()
     m.update(cert_bytes)

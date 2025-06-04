@@ -77,7 +77,7 @@ from datetime import datetime
 from twisted.application.internet import TCPClient
 from twisted.application.service import MultiService
 from twisted.internet import defer, reactor
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.error import ProcessDone, ProcessTerminated
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import usage
@@ -407,7 +407,7 @@ class NodeConfig(object):
         """Loads node configuration from the registry."""
         instance = cls(parent)
         yield instance._init()
-        returnValue(instance)
+        return instance
 
     def __init__(self, parent):
         self.parent = parent
@@ -478,7 +478,7 @@ class NodeConfig(object):
         dirs = remove_empties(ans.dirs)
         exts = remove_empties(ans.exts)
         autostart = sorted(remove_empties(ans.autostart))
-        returnValue((dirs, exts, autostart))
+        return (dirs, exts, autostart)
 
     def _save(self):
         """Save the current configuration to the registry."""
@@ -708,20 +708,20 @@ class NodeServer(LabradServer):
             self._remove_instance(instance_name)
         handle_shutdown()
 
-        returnValue(instance_name)
+        return instance_name
 
     @setting(2, instance_name='s', returns='s')
     def stop(self, c, instance_name):
         """Stop a running server instance."""
         yield self._stop(instance_name)
-        returnValue(instance_name)
+        return instance_name
 
     @setting(3, instance_name='s', returns='s')
     def restart(self, c, instance_name):
         """Restart a running server instance."""
         inst = yield self._stop(instance_name)
         yield self.start(c, inst.server_name, inst.env)
-        returnValue(instance_name)
+        return instance_name
 
     @inlineCallbacks
     def _stop(self, instance_name):
@@ -732,7 +732,7 @@ class NodeServer(LabradServer):
         yield inst.stop()
         # ensure instance is removed from instance dict before we return
         self._remove_instance(instance_name) 
-        returnValue(inst)
+        return inst
 
     def _remove_instance(self, instance_name):
         if instance_name in self.instances:
@@ -862,7 +862,7 @@ class NodeServer(LabradServer):
             else:
                 info['status'] = 'restarted'
         if outdated:
-            returnValue(tuple(tuple(info.items()) for info in outdated))
+            return tuple(tuple(info.items()) for info in outdated)
 
     def _get_outdated(self):
         outdated = []
