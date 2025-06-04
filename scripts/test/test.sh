@@ -25,6 +25,8 @@ fi
 
 # start labrad manager
 labrad 1>.labrad.log 2>.labrad.err.log &
+LABRAD_PID=$!
+trap 'kill $LABRAD_PID 2>/dev/null' EXIT
 sleep 20
 
 # run the tests
