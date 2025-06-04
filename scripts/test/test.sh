@@ -1,8 +1,32 @@
 #!/bin/sh
 
+set -e
+
+# Ensure Java 17+ is available
+JAVA_STR=$(java -version 2>&1 | awk -F\" '/version/ {print $2}')
+JAVA_MAJOR=$(echo $JAVA_STR | cut -d. -f1)
+if [ "$JAVA_MAJOR" = "1" ]; then
+  JAVA_MAJOR=$(echo $JAVA_STR | cut -d. -f2)
+fi
+if [ "$JAVA_MAJOR" -lt 17 ]; then
+  echo "Java 17 or newer required; found $JAVA_STR" >&2
+  exit 1
+fi
+
 export LABRADHOST=localhost
 export LABRADPASSWORD=testpass
-export LABRADPORT=7777
+# Pick free ports for manager so tests do not clash with other services
+get_free_port() {
+  python3 - <<'EOF'
+import socket
+s=socket.socket()
+s.bind(('',0))
+print(s.getsockname()[1])
+s.close()
+EOF
+}
+export LABRADPORT="$(get_free_port)"
+export LABRAD_TLS_PORT="$(get_free_port)"
 export CI=true
 
 # Ensure scalabrad is installed and available
@@ -32,7 +56,7 @@ fi
 python3 -m pip install --break-system-packages --no-deps .
 
 # start labrad manager
-labrad 1>.labrad.log 2>.labrad.err.log &
+labrad --port=$LABRADPORT --tls-port=$LABRAD_TLS_PORT 1>.labrad.log 2>.labrad.err.log &
 LABRAD_PID=$!
 trap 'kill $LABRAD_PID 2>/dev/null' EXIT
 sleep 20
