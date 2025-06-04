@@ -20,7 +20,7 @@ import sys
 import textwrap
 
 from twisted.internet import defer, reactor
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import blockingCallFromThread
 from twisted.python import log, reflect, util
 
