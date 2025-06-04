@@ -110,7 +110,7 @@ def clear_queue(q):
 class TestNode(object):
 
     def test_node_autodetect(self):
-        with labrad.connect() as cxn:
+        with labrad.connect(timeout=5) as cxn:
             with run_node('test', cxn) as n:
                 servers = n.node.available_servers()
                 assert 'Python Test Server' in servers
@@ -132,7 +132,7 @@ class TestNode(object):
                 assert 'Local Python Test Server' in servers
 
     def test_node_status_on_startup(self):
-        with labrad.connect() as cxn:
+        with labrad.connect(timeout=5) as cxn:
             with subscribe_to_node_messages(cxn) as mq:
                 with run_node('test', cxn, update_registry=False) as n:
                     self._check_status_message(mq.get(timeout=1))
@@ -169,7 +169,7 @@ class TestNode(object):
                     remaining_names.remove(message_name)
                     assert dict(message_params) == expected_message
 
-        with labrad.connect() as cxn:
+        with labrad.connect(timeout=5) as cxn:
             with run_node(node_name, cxn) as n:
                 with subscribe_to_node_messages(cxn) as mq:
                     n.node.start(name)
@@ -229,7 +229,7 @@ class TestNode(object):
         )
 
     def test_node_shuts_down_running_servers_when_stopped(self):
-        with labrad.connect() as cxn:
+        with labrad.connect(timeout=5) as cxn:
             with run_node('test', cxn) as n:
                 n.node.start('Python Test Server')
                 n.node.start('Local Python Test Server')
@@ -253,7 +253,7 @@ class TestNode(object):
             message = 987654321
             timeout = 5
         """
-        with labrad.connect() as cxn:
+        with labrad.connect(timeout=5) as cxn:
             with run_node('test', cxn) as n:
                 with util.temp_directory() as temp_dir:
                     # start running an existing server version

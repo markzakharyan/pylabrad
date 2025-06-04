@@ -27,7 +27,7 @@ class SignalTestServer(LabradServer):
 
 def _test_signals(signal_setting, fire_setting):
     with labrad.util.syncRunServer(SignalTestServer()):
-        with labrad.connect() as cxn:
+        with labrad.connect(timeout=5) as cxn:
             server = cxn.signal_test_server
             msg_id = 12345
 

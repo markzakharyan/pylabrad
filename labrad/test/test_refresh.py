@@ -44,7 +44,7 @@ class RefreshServer3(LabradServer):
         pass
 
 def test_refresh():
-    with labrad.connect() as cxn:
+    with labrad.connect(timeout=5) as cxn:
 
         assert not hasattr(cxn, 'refresh_test_server')
 

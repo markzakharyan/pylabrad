@@ -13,7 +13,7 @@ class TestClient:
     def setup_class(cls):
         cls.exit_stack = contextlib.ExitStack()
         cls.exit_stack.enter_context(syncRunServer(PythonTestServer()))
-        cls.cxn = cls.exit_stack.enter_context(labrad.connect())
+        cls.cxn = cls.exit_stack.enter_context(labrad.connect(timeout=5))
 
     def teardown_class(cls):
         cls.exit_stack.close()
