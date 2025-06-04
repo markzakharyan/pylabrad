@@ -3,6 +3,7 @@
 export LABRADHOST=localhost
 export LABRADPASSWORD=testpass
 export LABRADPORT=7777
+export CI=true
 
 # Ensure scalabrad is installed and available
 SCALABRAD_VERSION="${SCALABRAD_VERSION}"
@@ -21,9 +22,10 @@ export SCALABRAD_VERSION
 
 # Install python dependencies if needed
 if ! python -c "import twisted" 2>/dev/null; then
-  pip install -r requirements.txt
-  pip install -e .
+  python3 -m pip install --break-system-packages --ignore-installed -r requirements.txt
+  python3 -m pip install --break-system-packages pytest
 fi
+python3 -m pip install --break-system-packages --no-deps .
 
 # start labrad manager
 labrad 1>.labrad.log 2>.labrad.err.log &

@@ -1,6 +1,7 @@
 import collections
 import contextlib
 from datetime import datetime, timedelta
+import socket
 import os
 import shutil
 import subprocess
@@ -77,8 +78,15 @@ def temp_tls_dirs():
 ManagerInfo = collections.namedtuple('ManagerInfo', ['port', 'tls_port', 'password'])
 
 
+def _free_port():
+    s = socket.socket()
+    s.bind(('', 0))
+    p = s.getsockname()[1]
+    s.close()
+    return p
+
 @contextlib.contextmanager
-def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
+def run_manager(tls_required, port=None, tls_port=None, startup_timeout=20):
     """Context manager to run the labrad manager in a subprocess.
 
     Will attempt to connect to the manager and fail if we cannot do so within
@@ -99,6 +107,10 @@ def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
     Yields (ManagerInfo):
         Info about the running manager.
     """
+    if port is None:
+        port = _free_port()
+    if tls_port is None:
+        tls_port = _free_port()
     with temp_tls_dirs() as (cert_path, key_path):
         password = 'DummyPassword'
         cert_file = os.path.join(cert_path, 'localhost.cert')
@@ -131,7 +143,11 @@ def run_manager(tls_required, port=7778, tls_port=7779, startup_timeout=20):
                 time.sleep(0.5)
             yield ManagerInfo(port, tls_port, password)
         finally:
-            manager.kill()
+            manager.terminate()
+            try:
+                manager.wait(timeout=5)
+            except Exception:
+                manager.kill()
 
 
 # Test that we can establish encrypted TLS connections to the manager
