@@ -20,7 +20,11 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 
 IN_CI = os.environ.get('CI', False)
-ci_only = pytest.mark.skipif(not IN_CI, reason='only runs in CI')
+SCALA_VER = os.environ.get('SCALABRAD_VERSION', '')
+pytestmark = pytest.mark.skipif(
+    not IN_CI or SCALA_VER.startswith('0.9'),
+    reason='only runs in CI and requires scalabrad >=1.0',
+)
 
 
 @contextlib.contextmanager
@@ -152,7 +156,6 @@ def run_manager(tls_required, port=None, tls_port=None, startup_timeout=20):
 
 # Test that we can establish encrypted TLS connections to the manager
 
-@ci_only
 def test_connect_with_starttls():
     with run_manager(tls_required=True) as m:
         with labrad.connect(port=m.port, tls_mode='starttls-force',
@@ -160,7 +163,6 @@ def test_connect_with_starttls():
             pass
 
 
-@ci_only
 def test_connect_with_optional_starttls():
     with run_manager(tls_required=False) as m:
         with labrad.connect(port=m.port, tls_mode='off',
@@ -168,7 +170,6 @@ def test_connect_with_optional_starttls():
             pass
 
 
-@ci_only
 def test_connect_with_tls():
     with run_manager(tls_required=True) as m:
         with labrad.connect(port=m.tls_port, tls_mode='on',
@@ -179,7 +180,6 @@ def test_connect_with_tls():
 # Test that connecting to the manager fails if the client fails to
 # use TLS when the manager expects it.
 
-@ci_only
 def test_expect_starttls_use_off():
     with run_manager(tls_required=True) as m:
         with pytest.raises(Exception):
@@ -188,7 +188,6 @@ def test_expect_starttls_use_off():
                 pass
 
 
-@ci_only
 def test_expect_tls_use_off():
     with run_manager(tls_required=True) as m:
         with pytest.raises(Exception):
@@ -197,7 +196,6 @@ def test_expect_tls_use_off():
                 pass
 
 
-@ci_only
 def test_expect_tls_use_starttls():
     with run_manager(tls_required=True) as m:
         with pytest.raises(Exception):
