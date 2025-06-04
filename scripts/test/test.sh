@@ -1,5 +1,18 @@
 #!/bin/sh
 
+set -e
+
+# Ensure Java 17+ is available
+JAVA_STR=$(java -version 2>&1 | awk -F\" '/version/ {print $2}')
+JAVA_MAJOR=$(echo $JAVA_STR | cut -d. -f1)
+if [ "$JAVA_MAJOR" = "1" ]; then
+  JAVA_MAJOR=$(echo $JAVA_STR | cut -d. -f2)
+fi
+if [ "$JAVA_MAJOR" -lt 17 ]; then
+  echo "Java 17 or newer required; found $JAVA_STR" >&2
+  exit 1
+fi
+
 export LABRADHOST=localhost
 export LABRADPASSWORD=testpass
 export LABRADPORT=7777
