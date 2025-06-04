@@ -20,6 +20,10 @@ else
 fi
 export SCALABRAD_VERSION
 
+echo "labrad executable: $(command -v labrad)" >&2
+LABRAD_VERSION=$(grep -m1 PROG_VERSION "$(command -v labrad)" | cut -d= -f2)
+echo "labrad version: ${LABRAD_VERSION}" >&2
+
 # Install python dependencies if needed
 if ! python -c "import twisted" 2>/dev/null; then
   python3 -m pip install --break-system-packages --ignore-installed -r requirements.txt
