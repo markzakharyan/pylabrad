@@ -23,7 +23,7 @@ def test_server_expire_context_method_is_called():
             return data
 
     with util.syncRunServer(TestServer()):
-        with labrad.connect() as cxn:
+        with labrad.connect(timeout=5) as cxn:
             # create a random context owned by this connection
             request_context = (cxn.ID, random.randint(0, 2**32-1))
             cxn.testserver.echo('hello, world!', context=request_context)
@@ -41,7 +41,7 @@ def test_threaded_server_client_can_be_spawned():
                 return cxn[server][setting](data)
 
     with util.syncRunServer(TestServer()):
-        with labrad.connect() as cxn:
+        with labrad.connect(timeout=5) as cxn:
             result = cxn.testserver.spawn_call('Manager', 'Echo', 'woot!')
             assert result == 'woot!'
 
