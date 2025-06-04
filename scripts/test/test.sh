@@ -14,6 +14,8 @@ if ! command -v labrad >/dev/null; then
   echo "Installing scalabrad version $SCALABRAD_VERSION"
   bash "$(dirname "$0")/install-scalabrad.sh"
   export PATH="$PATH:$HOME/scalabrad-$SCALABRAD_VERSION/bin"
+else
+  echo "Using existing scalabrad at $(command -v labrad)"
 fi
 export SCALABRAD_VERSION
 
