@@ -8,7 +8,7 @@ SCALABRAD_VERSION="${SCALABRAD_VERSION:-0.9.0}"
 
 ARCHIVE="scalabrad-${SCALABRAD_VERSION}.tar.gz"
 
-URL_BASE="https://github.com/markzakharyan/scalalbrad/releases/download/v${SCALABRAD_VERSION}"
+URL_BASE="https://github.com/markzakharyan/scalabrad/releases/download/v${SCALABRAD_VERSION}"
 
 echo "Fetching scalabrad ${SCALABRAD_VERSION} from ${URL_BASE}" >&2
 
