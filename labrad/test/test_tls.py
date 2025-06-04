@@ -19,12 +19,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-IN_CI = os.environ.get('CI', False)
-SCALA_VER = os.environ.get('SCALABRAD_VERSION', '')
-pytestmark = pytest.mark.skipif(
-    not IN_CI or SCALA_VER.startswith('0.9'),
-    reason='only runs in CI and requires scalabrad >=1.0',
-)
+
 
 
 @contextlib.contextmanager
